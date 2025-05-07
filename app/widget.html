@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="./index.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="dashboard">
+    <section class="container">
+      <div id="app"></div>
+    </section>
+    <section class="footer">
+      <p style="font-weight: 600; padding-left: 20px;">
+        <img src="./static/img/image.png" width="20" height="20"
+          style="position: relative; top: 3px; padding-right: 4px;" />
+        Developed By- BuildX Team
+      </p>
+    </section>
+  </div>
+
+  <script src="./static/js/react.development.js"></script>
+  <script src="./static/js/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    window.PageContext = React.createContext({
+      page: "google",
+      changePage: () => { }
+    });
+  </script>
+
+  <script src="./dist/components/Mdoughnut.js"></script>
+  <script src="./dist/components/Qdoughnut.js"></script>
+  <script src="./dist/components/Doughnut.js"></script>
+  <script src="./dist/components/Reloading.js"></script>
+  <script src="./dist/components/ChartDisplay.js"></script>
+  <script src="./dist/components/GraphSection.js"></script>
+  <script src="./dist/components/MeetingOptions.js"></script>
+  <script src="./dist/components/TimeOptions.js"></script>
+  <script src="./dist/components/PageOptions.js"></script>
+  <script src="./dist/components/Header.js"></script>
+
+  <script src="./main.js"></script>
+
+</body>
+
+</html>
