@@ -15,6 +15,8 @@ class Mdoughnut extends React.Component {
         if (
             prevProps.googleLeads !== this.props.googleLeads ||
             prevProps.facebookLeads !== this.props.facebookLeads ||
+            prevProps.referralLeads !== this.props.referralLeads ||
+            prevProps.cpleadLeads !== this.props.cpleadLeads ||
             prevProps.page !== this.props.page
         ) {
             this.destroyChart();
@@ -37,22 +39,24 @@ class Mdoughnut extends React.Component {
         const CHART_COLORS = {
             google: '#f8b474',
             facebook: '#88bcfc',
+             referral: ' #7d3c98 ',
+            cplead: ' #f1c40f '
         };
 
-        const { googleLeads = 0, facebookLeads = 0, page } = this.props;
+        const { googleLeads = 0, facebookLeads = 0,referralLeads = 0, cpleadLeads = 0, page } = this.props;
 
         let chartLabels = [];
         let chartData = [];
         let chartColors = [];
 
         if (page === "comparison") {
-            chartLabels = ["Google", "Facebook"];
-            chartData = [googleLeads, facebookLeads];
-            chartColors = [CHART_COLORS.google, CHART_COLORS.facebook];
+            chartLabels = ["Google", "Facebook", "Referral", "CP Lead"];
+            chartData = [googleLeads, facebookLeads, referralLeads, cpleadLeads];
+            chartColors = [CHART_COLORS.google, CHART_COLORS.facebook, CHART_COLORS.referral, CHART_COLORS.cplead];
         } else {
             const label = page.charAt(0).toUpperCase() + page.slice(1);
             chartLabels = [label];
-            chartData = [page === "google" ? googleLeads : facebookLeads];
+            chartData = [page === "google" ? googleLeads : page == "referral" ? referralLeads : page == "cplead" ? cpleadLeads : facebookLeads];
             chartColors = [CHART_COLORS[page]];
         }
 

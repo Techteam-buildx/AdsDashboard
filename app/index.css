@@ -67,7 +67,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 40px;
-    justify-content: space-between; 
+    justify-content: center; 
     width: 100%;
     box-sizing: border-box;
 }

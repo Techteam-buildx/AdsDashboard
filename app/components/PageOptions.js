@@ -19,6 +19,8 @@ class PageOptions extends React.Component {
                 >
                     <option value="google">Google</option>
                     <option value="facebook">Facebook</option>
+                    <option value='referral'>Referral</option>
+                    <option value="cplead">CP Lead</option>
                     <option value="comparison">Combined View</option>
                 </select>
             </div>

@@ -3,14 +3,14 @@ class GraphSection extends React.Component {
 
     render() {
         const { page, loading } = this.context;
-        const { data, google, fb, q_google, q_fb, m_google, m_fb } = this.props;
+        const { data, google,fb,referral,cplead, q_google, q_fb,q_referral,q_cplead, m_google, m_fb,m_referral,m_cplead } = this.props;
 
         console.log('props in GraphSection: ', this.props);
 
         return (
             <>
                 {
-                    page != "google" && page != "facebook" ? (
+                    ((page != "google" && page != "facebook") && (page != "referral" && page!="cplead")) ? (
                         <div style={{ minHeight: "600px" }}>
                             {
                                 loading ?
@@ -24,9 +24,9 @@ class GraphSection extends React.Component {
                                     </>
                                     :
                                     <div style={{ display: 'flex', justifyContent: "center", gap: "80px", width: "100%" }}>
-                                        <Doughnut googleLeads={google} facebookLeads={fb} page={page} />
-                                        <Qdoughnut googleLeads={q_google} facebookLeads={q_fb} page={page} />
-                                        <Mdoughnut googleLeads={m_google} facebookLeads={m_fb} page={page} />
+                                        <Doughnut googleLeads={google} facebookLeads={fb} referralLeads={referral} cpleadLeads={cplead} page={page} />
+                                        <Qdoughnut googleLeads={q_google} facebookLeads={q_fb} referralLeads={q_referral} cpleadLeads={q_cplead} page={page}/>
+                                        <Mdoughnut googleLeads={m_google} facebookLeads={m_fb} referralLeads={m_referral} cpleadLeads={m_cplead} page={page} />
                                     </div>
                             }
                         </div>
