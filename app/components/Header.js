@@ -61,50 +61,50 @@ class Header extends React.Component {
         this.setState({ mStartDate: startDate, mEndDate: endDate, loading: true });
 
         try {
-                const response = await fetch(`https://127.0.0.1:8000/app/leads/meetingfilter/${this.state.startDate}/${this.state.endDate}/${startDate}/${endDate}`);
-                const data = await response.json();
+            const response = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetingfilter/${this.state.startDate}/${this.state.endDate}/${startDate}/${endDate}`);
+            const data = await response.json();
 
-                const meetingResponse = await fetch(`https://127.0.0.1:8000/app/leads/meetings/${startDate}/${endDate}`);
-                const meetingData = await meetingResponse.json();
+            const meetingResponse = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetings/${startDate}/${endDate}`);
+            const meetingData = await meetingResponse.json();
 
-                data.google_meeting = meetingData.google_meeting || 0;
-                data.facebook_meeting = meetingData.facebook_meeting || 0;
-                data.referral_meeting = meetingData.referral_meeting || 0;
-                data.cplead_meeting = meetingData.cplead_meeting || 0;
+            data.google_meeting = meetingData.google_meeting || 0;
+            data.facebook_meeting = meetingData.facebook_meeting || 0;
+            data.referral_meeting = meetingData.referral_meeting || 0;
+            data.cplead_meeting = meetingData.cplead_meeting || 0;
 
-                const widgets = this.computeWidgets(data, this.state.page);
-                const graph = this.computeGraph(data, this.state.page);
-                const leads = this.getLeads(data);
+            const widgets = this.computeWidgets(data, this.state.page);
+            const graph = this.computeGraph(data, this.state.page);
+            const leads = this.getLeads(data);
 
-                this.setState({
-                    graphData: data,
-                    widgets,
-                    graph,
-                    loading: false,
-                    google: leads.google,
-                    fb: leads.fb,
-                    referral: leads.referral,
-                    cplead: leads.cplead,
-                    q_google: leads.q_google,
-                    q_fb: leads.q_fb,
-                    q_referral: leads.q_referral,
-                    q_cplead: leads.q_cplead,
-                    m_google: leads.m_google,
-                    m_fb: leads.m_fb,
-                    m_referral: leads.m_referral,
-                    m_cplead: leads.m_cplead
-                });
+            this.setState({
+                graphData: data,
+                widgets,
+                graph,
+                loading: false,
+                google: leads.google,
+                fb: leads.fb,
+                referral: leads.referral,
+                cplead: leads.cplead,
+                q_google: leads.q_google,
+                q_fb: leads.q_fb,
+                q_referral: leads.q_referral,
+                q_cplead: leads.q_cplead,
+                m_google: leads.m_google,
+                m_fb: leads.m_fb,
+                m_referral: leads.m_referral,
+                m_cplead: leads.m_cplead
+            });
 
 
-            } catch (e) {
-                console.error("Error fetching main data: ", e.message);
-                this.setState({ loading: false });
-            }
+        } catch (e) {
+            console.error("Error fetching main data: ", e.message);
+            this.setState({ loading: false });
+        }
 
-           
+
         // if (startDate && endDate) {
         //     try {
-        //         const response = await fetch(`https://127.0.0.1:8000/app/leads/meetings/${startDate}/${endDate}`);
+        //         const response = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetings/${startDate}/${endDate}`);
         //         const data = await response.json();
 
         //         const page = this.state.page;
@@ -140,10 +140,10 @@ class Header extends React.Component {
 
         if (startDate && endDate) {
             try {
-                const response = await fetch(`https://127.0.0.1:8000/app/leads/${startDate}/${endDate}`);
+                const response = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/${startDate}/${endDate}`);
                 const data = await response.json();
 
-                const meetingResponse = await fetch(`https://127.0.0.1:8000/app/leads/meetings/${startDate}/${endDate}`);
+                const meetingResponse = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetings/${startDate}/${endDate}`);
                 const meetingData = await meetingResponse.json();
 
                 data.google_meeting = meetingData.google_meeting || 0;
