@@ -22,6 +22,7 @@ class PageOptions extends React.Component {
                     <option value='referral'>Referral</option>
                     <option value="cplead">CP Lead</option>
                     <option value="comparison">Combined View</option>
+                    <option value="socials">Socials</option>
                 </select>
             </div>
         );

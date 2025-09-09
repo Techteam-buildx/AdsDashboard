@@ -21,13 +21,16 @@ class Header extends React.Component {
             google: 0,
             fb: 0,
             referral: 0,
+            socials:0,
             cplead: 0,
             q_google: 0,
             q_fb: 0,
+            q_socials:0,
             q_referral: 0,
             q_cplead: 0,
             m_google: 0,
             m_fb: 0,
+            m_socials:0,
             m_referral: 0,
             m_cplead: 0
         };
@@ -61,14 +64,15 @@ class Header extends React.Component {
         this.setState({ mStartDate: startDate, mEndDate: endDate, loading: true });
 
         try {
-            const response = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetingfilter/${this.state.startDate}/${this.state.endDate}/${startDate}/${endDate}`);
+            const response = await fetch(`https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetingfilter/${this.state.startDate}/${this.state.endDate}/${startDate}/${endDate}`);
             const data = await response.json();
 
-            const meetingResponse = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetings/${startDate}/${endDate}`);
+            const meetingResponse = await fetch(`https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetings/${startDate}/${endDate}`);
             const meetingData = await meetingResponse.json();
 
             data.google_meeting = meetingData.google_meeting || 0;
             data.facebook_meeting = meetingData.facebook_meeting || 0;
+            data.socials_meeting = meetingData.socials_meeting || 0;
             data.referral_meeting = meetingData.referral_meeting || 0;
             data.cplead_meeting = meetingData.cplead_meeting || 0;
 
@@ -83,14 +87,17 @@ class Header extends React.Component {
                 loading: false,
                 google: leads.google,
                 fb: leads.fb,
+                socials:leads.socials,
                 referral: leads.referral,
                 cplead: leads.cplead,
                 q_google: leads.q_google,
                 q_fb: leads.q_fb,
                 q_referral: leads.q_referral,
+                q_socials:leads.q_socials,
                 q_cplead: leads.q_cplead,
                 m_google: leads.m_google,
                 m_fb: leads.m_fb,
+                m_socials:leads.m_socials,
                 m_referral: leads.m_referral,
                 m_cplead: leads.m_cplead
             });
@@ -104,7 +111,7 @@ class Header extends React.Component {
 
         // if (startDate && endDate) {
         //     try {
-        //         const response = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetings/${startDate}/${endDate}`);
+        //         const response = await fetch(`https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetings/${startDate}/${endDate}`);
         //         const data = await response.json();
 
         //         const page = this.state.page;
@@ -140,14 +147,15 @@ class Header extends React.Component {
 
         if (startDate && endDate) {
             try {
-                const response = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/${startDate}/${endDate}`);
+                const response = await fetch(`https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/${startDate}/${endDate}`);
                 const data = await response.json();
 
-                const meetingResponse = await fetch(`https://adsdashboardbackend.onrender.com/app/leads/meetings/${startDate}/${endDate}`);
+                const meetingResponse = await fetch(`https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetings/${startDate}/${endDate}`);
                 const meetingData = await meetingResponse.json();
 
                 data.google_meeting = meetingData.google_meeting || 0;
                 data.facebook_meeting = meetingData.facebook_meeting || 0;
+                data.socials_meeting = meetingData.socials_meeting || 0;
                 data.referral_meeting = meetingData.referral_meeting || 0;
                 data.cplead_meeting = meetingData.cplead_meeting || 0;
 
@@ -162,14 +170,17 @@ class Header extends React.Component {
                     loading: false,
                     google: leads.google,
                     fb: leads.fb,
+                    socials: leads.socials,
                     referral: leads.referral,
                     cplead: leads.cplead,
                     q_google: leads.q_google,
                     q_fb: leads.q_fb,
+                    q_socials: leads.q_socials,
                     q_referral: leads.q_referral,
                     q_cplead: leads.q_cplead,
                     m_google: leads.m_google,
                     m_fb: leads.m_fb,
+                    m_socials: leads.m_socials,
                     m_referral: leads.m_referral,
                     m_cplead: leads.m_cplead
                 });
@@ -229,6 +240,20 @@ class Header extends React.Component {
             lpc = data.lpc_cplead;
             cqf = (data.cplead_future_qualified + data.cplead_qualified) > 0 ? (budget / (data.cplead_future_qualified + data.cplead_qualified)) : 0;
         }
+        else if(page == 'socials'){
+            budget = data.socials_budget;
+            leads =  data.socials_leads;
+            cpl = data.cpl_socials;
+            meetings_done =  data.socials_meetings_done;
+            cpm = data.cpm_socials;
+            qualified = data.socials_qualified;
+            future_qualified = data.socials_future_qualified;
+            cpq = qualified ? budget / qualified : 0;
+            converted = data.socials_converted;
+            lpc = data.lpc_socials;
+            cqf = (future_qualified + qualified) > 0 ? (budget/(future_qualified + qualified)) : 0;
+
+        }
         else {
             const isFacebook = page === "facebook";
             budget = isFacebook ? data.facebook_budget : data.google_budget;
@@ -266,22 +291,26 @@ class Header extends React.Component {
         const fb = this.computeWidgets(data, "facebook");
         const referral = this.computeWidgets(data, "referral");
         const cplead = this.computeWidgets(data, "cplead");
+        const socials = this.computeWidgets(data,"socials")
 
         const google_leads = google.find(w => w.title === "Leads")?.value || 0;
         const fb_leads = fb.find(w => w.title === "Leads")?.value || 0;
         const referral_leads = referral.find(w => w.title === "Leads")?.value || 0;
         const cplead_leads = cplead.find(w => w.title === "Leads")?.value || 0;
+        const socials_leads = socials.find(w => w.title === "Leads")?.value || 0;
         const q_google = google.find(w => w.title === "Qualified")?.value || 0;
         const q_fb = fb.find(w => w.title === "Qualified")?.value || 0;
         const q_referral = referral.find(w => w.title === "Qualified")?.value || 0;
         const q_cplead = cplead.find(w => w.title === "Qualified")?.value || 0;
+        const q_socials = socials.find(w => w.title === "Qualified")?.value || 0;
         const m_google = google.find(w => w.title === "Meetings Done")?.value || 0;
         const m_fb = fb.find(w => w.title === "Meetings Done")?.value || 0;
+        const m_socials = socials.find(w => w.title === "Meetings Done")?.value || 0;
         const m_referral = referral.find(w => w.title === "Meetings Done")?.value || 0;
         const m_cplead = cplead.find(w => w.title === "Meetings Done")?.value || 0;
 
 
-        return { fb: fb_leads, google: google_leads, referral: referral_leads, cplead: cplead_leads, q_google, q_fb, q_referral, q_cplead, m_google, m_fb, m_referral, m_cplead };
+        return { fb: fb_leads, google: google_leads,socials:socials_leads, referral: referral_leads, cplead: cplead_leads, q_google, q_fb,q_socials, q_referral, q_cplead, m_google, m_fb,m_socials, m_referral, m_cplead };
     }
 
 
@@ -318,6 +347,13 @@ class Header extends React.Component {
             m = safeArray(data.cplead_meetingsData);
             q = safeArray(data.cplead_qualifiedData);
             c = safeArray(data.cplead_convertedData);
+        }
+        else if (page === "socials"){
+            f =  safeArray(data.socials_budgetData);
+            s = safeArray(data.socials_leadsData);
+            m = safeArray(data.socials_meetingsData);
+            q = safeArray(data.socials_qualifiedData);
+            c = safeArray(data.socials_convertedData)
         }
         else {
             const isFacebook = page === "facebook";
@@ -379,6 +415,7 @@ class Header extends React.Component {
                                 <span style={{ backgroundColor: "#408cf4", color: "white", padding: "5px 10px", borderRadius: "10px" }}>F</span>acebook
                             </div>
                         ) : page === "referral" ? <h1>Referral</h1> : page === "cplead" ? <h1>CP Leads</h1>
+                        : page === "socials" ? <h1>Socials</h1>
                             : (
                                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px" }}>
                                     <div style={{ fontSize: "40px", fontWeight: 600 }}>
@@ -416,7 +453,7 @@ class Header extends React.Component {
                         ))}
                     </div>
 
-                    <GraphSection data={graph} google={this.state.google} fb={this.state.fb} referral={this.state.referral} cplead={this.state.cplead} q_google={this.state.q_google} q_fb={this.state.q_fb} q_referral={this.state.q_referral} q_cplead={this.state.q_cplead} m_google={this.state.m_google} m_fb={this.state.m_fb} m_referral={this.state.m_referral} m_cplead={this.state.m_cplead} />
+                    <GraphSection data={graph} google={this.state.google} fb={this.state.fb} referral={this.state.referral} socials={this.state.socials} cplead={this.state.cplead} q_google={this.state.q_google} q_fb={this.state.q_fb} q_referral={this.state.q_referral} q_socials={this.state.q_socials} q_cplead={this.state.q_cplead} m_google={this.state.m_google} m_fb={this.state.m_fb} m_referral={this.state.m_referral} m_socials={this.state.m_socials} m_cplead={this.state.m_cplead} />
 
                 </div>
             </PageContext.Provider>
