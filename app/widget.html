@@ -28,7 +28,9 @@
   <script>
     window.PageContext = React.createContext({
       page: "google",
-      changePage: () => { }
+      graphInterval: "daily",
+      changePage: () => { },
+      changeGraphInterval: () => { },
     });
   </script>
 
@@ -42,6 +44,7 @@
   <script src="./dist/components/TimeOptions.js"></script>
   <script src="./dist/components/PageOptions.js"></script>
   <script src="./dist/components/Header.js"></script>
+  <script src="./dist/components/GraphIntervalOptions.js"></script>
 
   <script src="./main.js"></script>
 
