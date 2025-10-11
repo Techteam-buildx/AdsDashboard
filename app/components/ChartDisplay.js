@@ -49,7 +49,8 @@ class ChartDisplay extends React.Component {
             yAxisID: 'Budget',
             data: firstY,
             backgroundColor: '#fc646c',
-            borderColor: '#bf0b14'
+            borderColor: '#bf0b14',
+            order:2
           },
           {
             type: 'line',
@@ -57,7 +58,8 @@ class ChartDisplay extends React.Component {
             yAxisID: name,
             data: secondY,
             backgroundColor: '#3681d5',
-            borderColor: '#2354a3'
+            borderColor: '#2354a3',
+            order:1
           }
         ]
       },

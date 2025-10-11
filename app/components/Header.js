@@ -566,6 +566,7 @@ class Header extends React.Component {
             maxHeight: 80,
             minHeight: 80,
             position: "sticky",
+            zIndex:8,
             top: 0,
             display: "flex",
             justifyContent: "flex-start",
@@ -693,6 +694,9 @@ class Header extends React.Component {
               </div>
             ))}
           </div>
+          <div style={{ padding: "20px" }}>
+        <DynamicTable propObj={graph} page={this.state.page} load={this.state.loading}/>
+      </div>
           <GraphSection
             data={graph}
             google={this.state.google}
