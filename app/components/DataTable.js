@@ -57,8 +57,8 @@ class DynamicTable extends React.Component {
 
     return (
       <>
-        {loading || data?.Interval.length ==0 ? (
-          <div>Loading...</div>
+        {data?.Interval.length == 0 ? (
+          <p style={styles.noData}>No data for this range</p>
         ) : (
           <div style={styles.wrapper}>
             {/* <h1>{page+" "+interval}</h1> */}

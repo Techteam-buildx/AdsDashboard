@@ -3,42 +3,31 @@ class Header extends React.Component {
 
   constructor(props) {
     super(props);
+    this.requestCounter = 0;
+    this.abortController = null;
+    this.lastRequest = null;
     this.state = {
       page: "comparison",
       graphData: null,
-      graph: {
-        leads: { labels: [], firstY: [], secondY: [] },
-        meetings: { labels: [], firstY: [], secondY: [] },
-        qualified: { labels: [], firstY: [], secondY: [] },
-        converted: { labels: [], firstY: [], secondY: [] },
-      },
-      widgets: Array.from({ length: 8 }, (_, i) => ({ id: i + 1 })),
+      graph: emptyGraph(),
+      widgets: emptyWidgets(),
       graphInterval: "daily",
       startDate: null,
       endDate: null,
       mStartDate: null,
       mEndDate: null,
       loading: true,
-      google: 0,
-      fb: 0,
-      referral: 0,
-      socials: 0,
-      cplead: 0,
-      q_google: 0,
-      q_fb: 0,
-      q_socials: 0,
-      q_referral: 0,
-      q_cplead: 0,
-      m_google: 0,
-      m_fb: 0,
-      m_socials: 0,
-      m_referral: 0,
-      m_cplead: 0,
+      error: null,
+      warnings: [],
+      loadedRange: null,
+      dataAsOf: null,
+      ...emptyLeads(),
     };
   }
 
   changeGraphInterval = (type) => {
     this.setState((prevState) => {
+      if (!prevState.graphData) return { graphInterval: type };
       const updatedGraph = this.computeGraph(
         prevState.graphData,
         prevState.page,
@@ -54,6 +43,7 @@ class Header extends React.Component {
 
   changePage = (newPage) => {
     this.setState((prevState) => {
+      if (!prevState.graphData) return { page: newPage, graphInterval: "daily" };
       const updatedWidgets = this.computeWidgets(prevState.graphData, newPage);
       const updatedGraph = this.computeGraph(
         prevState.graphData,
@@ -71,160 +61,93 @@ class Header extends React.Component {
   };
 
   componentDidMount() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    const formattedDate = `${yyyy}-${mm}-${dd}`;
-
+    const formattedDate = formatLocalDate(new Date());
     this.handleDateChange(formattedDate, formattedDate);
   }
 
-  handleMeetingDateChange = async (startDate, endDate) => {
+  componentWillUnmount() {
+    if (this.abortController) this.abortController.abort();
+  }
+
+  handleMeetingDateChange = (startDate, endDate) => {
     console.log("Meeting Dates changed:", startDate, endDate);
-    this.setState({ mStartDate: startDate, mEndDate: endDate, loading: true });
-
-    try {
-      const response = await fetch(
-        `https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetingfilter/${this.state.startDate}/${this.state.endDate}/${startDate}/${endDate}`
-      );
-      const data = await response.json();
-
-      const meetingResponse = await fetch(
-        `https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetings/${startDate}/${endDate}`
-      );
-      const meetingData = await meetingResponse.json();
-
-      data.google_meeting = meetingData.google_meeting || 0;
-      data.facebook_meeting = meetingData.facebook_meeting || 0;
-      data.socials_meeting = meetingData.socials_meeting || 0;
-      data.referral_meeting = meetingData.referral_meeting || 0;
-      data.cplead_meeting = meetingData.cplead_meeting || 0;
-
-      const widgets = this.computeWidgets(data, this.state.page);
-      const graph = this.computeGraph(
-        data,
-        this.state.page,
-        this.state.graphInterval
-      );
-      const leads = this.getLeads(data);
-
-      this.setState({
-        graphData: data,
-        widgets,
-        graph,
-        loading: false,
-        google: leads.google,
-        fb: leads.fb,
-        socials: leads.socials,
-        referral: leads.referral,
-        cplead: leads.cplead,
-        q_google: leads.q_google,
-        q_fb: leads.q_fb,
-        q_referral: leads.q_referral,
-        q_socials: leads.q_socials,
-        q_cplead: leads.q_cplead,
-        m_google: leads.m_google,
-        m_fb: leads.m_fb,
-        m_socials: leads.m_socials,
-        m_referral: leads.m_referral,
-        m_cplead: leads.m_cplead,
-      });
-    } catch (e) {
-      console.error("Error fetching main data: ", e.message);
-      this.setState({ loading: false });
-    }
-
-    // if (startDate && endDate) {
-    //     try {
-    //         const response = await fetch(`https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetings/${startDate}/${endDate}`);
-    //         const data = await response.json();
-
-    //         const page = this.state.page;
-    //         let value;
-    //         //API2 LEFT
-    //         if (page === "comparison") {
-    //             value = data.google_meeting + data.facebook_meeting;
-    //         } else if (page === "facebook") {
-    //             value = data.facebook_meeting;
-    //         } else {
-    //             value = data.google_meeting;
-    //         }
-
-    //         this.setState(prevState => ({
-    //             widgets: prevState.widgets.map(widget =>
-    //                 widget.id === 5 ? { ...widget, value } : widget
-    //             ),
-    //             loading: false
-    //         }));
-    //     } catch (e) {
-    //         console.error("Error fetching meeting data: ", e.message);
-    //         this.setState({ loading: false });
-    //     }
-    // }
+    this.setState({ mStartDate: startDate, mEndDate: endDate });
+    this.loadData({
+      startDate: this.state.startDate,
+      endDate: this.state.endDate,
+      mStartDate: startDate,
+      mEndDate: endDate,
+    });
   };
 
-  handleDateChange = async (startDate, endDate) => {
+  handleDateChange = (startDate, endDate) => {
     console.log("Main Dates changed:", startDate, endDate);
     this.setState({
       startDate,
       endDate,
       mStartDate: startDate,
       mEndDate: endDate,
-      loading: true,
     });
-
     if (startDate && endDate) {
-      try {
-        const response = await fetch(
-          `https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/${startDate}/${endDate}`
-        );
-        const data = await response.json();
+      this.loadData({ startDate, endDate });
+    }
+  };
 
-        const meetingResponse = await fetch(
-          `https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev/app/leads/meetings/${startDate}/${endDate}`
-        );
-        const meetingData = await meetingResponse.json();
+  retry = () => {
+    if (this.lastRequest) this.loadData(this.lastRequest);
+  };
 
-        data.google_meeting = meetingData.google_meeting || 0;
-        data.facebook_meeting = meetingData.facebook_meeting || 0;
-        data.socials_meeting = meetingData.socials_meeting || 0;
-        data.referral_meeting = meetingData.referral_meeting || 0;
-        data.cplead_meeting = meetingData.cplead_meeting || 0;
+  // Fetches dashboard data for a selection. Only the most recent selection may update
+  // the screen: older in-flight requests are aborted and their results ignored, and a
+  // failed request clears the numbers instead of leaving the previous range's data visible.
+  loadData = async (request) => {
+    const requestId = ++this.requestCounter;
+    this.lastRequest = request;
+    if (this.abortController) this.abortController.abort();
+    const controller = new AbortController();
+    this.abortController = controller;
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-        const widgets = this.computeWidgets(data, this.state.page);
-        const graph = this.computeGraph(
-          data,
-          this.state.page,
-          this.state.graphInterval
-        );
-        const leads = this.getLeads(data);
+    this.setState({ loading: true, error: null, warnings: [] });
 
-        this.setState({
-          graphData: data,
-          widgets,
-          graph,
-          loading: false,
-          google: leads.google,
-          fb: leads.fb,
-          socials: leads.socials,
-          referral: leads.referral,
-          cplead: leads.cplead,
-          q_google: leads.q_google,
-          q_fb: leads.q_fb,
-          q_socials: leads.q_socials,
-          q_referral: leads.q_referral,
-          q_cplead: leads.q_cplead,
-          m_google: leads.m_google,
-          m_fb: leads.m_fb,
-          m_socials: leads.m_socials,
-          m_referral: leads.m_referral,
-          m_cplead: leads.m_cplead,
-        });
-      } catch (e) {
-        console.error("Error fetching main data: ", e.message);
-        this.setState({ loading: false });
-      }
+    try {
+      const data = await fetchDashboard(request, controller.signal);
+      if (requestId !== this.requestCounter) return;
+
+      const widgets = this.computeWidgets(data, this.state.page);
+      const graph = this.computeGraph(data, this.state.page, this.state.graphInterval);
+      const leads = this.getLeads(data);
+      const errors = (data.meta && data.meta.errors) || {};
+
+      this.setState({
+        graphData: data,
+        widgets,
+        graph,
+        loading: false,
+        loadedRange: request,
+        dataAsOf: data.meta ? data.meta.leadsAsOf : null,
+        warnings: Object.values(errors),
+        ...leads,
+      });
+    } catch (e) {
+      if (requestId !== this.requestCounter) return;
+      const message =
+        e.name === "AbortError"
+          ? "The server took too long to respond."
+          : e.message || "Request failed.";
+      console.error("Error fetching dashboard data: ", message);
+      this.setState({
+        graphData: null,
+        widgets: emptyWidgets(),
+        graph: emptyGraph(),
+        loading: false,
+        loadedRange: null,
+        dataAsOf: null,
+        error: `Couldn't load data for ${describeRange(request)}. ${message}`,
+        ...emptyLeads(),
+      });
+    } finally {
+      clearTimeout(timer);
     }
   };
 
@@ -418,24 +341,24 @@ class Header extends React.Component {
     };
   };
 
-  consolidateData(dates, values, interval = "weekly", keyName = "values"){
-    const chunkSize = interval === "monthly" ? 30 : 7;
+  // Sums daily values into calendar weeks (Mon–Sun) or calendar months.
+  consolidateData(dates, values, interval = "weekly") {
     const labels = [];
     const resultValues = [];
+    let currentKey = null;
 
-    for (let i = 0; i < values.length; i += chunkSize) {
-        const chunk = values.slice(i, i + chunkSize);
-        const sum = chunk.reduce((acc, v) => acc + v, 0);
-        resultValues.push(sum);
+    dates.forEach((date, i) => {
+      const key = bucketLabel(date, interval);
+      if (key !== currentKey) {
+        currentKey = key;
+        labels.push(key);
+        resultValues.push(0);
+      }
+      resultValues[resultValues.length - 1] += values[i] || 0;
+    });
 
-        const label = interval === "monthly"
-        ? `Month${Math.floor(i / chunkSize) + 1}`
-        : `Week${Math.floor(i / chunkSize) + 1}`;
-        labels.push(label);
-    }
-
-    return { labels, [keyName]: resultValues };
-    }
+    return { labels, values: resultValues };
+  }
 
 
   computeGraph = (data, page, graphType) => {
@@ -510,26 +433,11 @@ class Header extends React.Component {
 
 
     if (graphType === "monthly" || graphType === "weekly") {
-      const series = { f, m, c, q, s }; // bundle your arrays
-      const newSeries = {};
-
-      for (const key of Object.keys(series)) {
-        const result = this.consolidateData(
-          labels,
-          series[key],
-          graphType,
-          key
-        );
-        labels = result.labels; // same for all
-        newSeries[key] = result[key];
-      }
-
-      // reassign back
-      f = newSeries.f;
-      m = newSeries.m;
-      c = newSeries.c;
-      q = newSeries.q;
-      s = newSeries.s;
+      const dates = labels;
+      labels = this.consolidateData(dates, f, graphType).labels;
+      [f, m, c, q, s] = [f, m, c, q, s].map(
+        (series) => this.consolidateData(dates, series, graphType).values
+      );
     }
 
 
@@ -583,6 +491,14 @@ class Header extends React.Component {
           <GraphIntervalOptions />
         </div>
         <div className="content-div">
+          <StatusBar
+            loading={loading}
+            error={this.state.error}
+            warnings={this.state.warnings}
+            loadedRange={this.state.loadedRange}
+            dataAsOf={this.state.dataAsOf}
+            onRetry={this.retry}
+          />
           <div
             className={
               page === "google" ? "nav-container" : "nav-container facebook"
@@ -719,4 +635,114 @@ class Header extends React.Component {
       </PageContext.Provider>
     );
   }
+}
+// ---------- data loading helpers ----------
+
+const API_BASE =
+  window.ADS_API_BASE != null
+    ? window.ADS_API_BASE
+    : "https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev";
+// API Gateway gives up at 29s; stop waiting just before that.
+const REQUEST_TIMEOUT_MS = 28000;
+
+const WIDGET_TITLES = [
+  "Budget", "Leads", "Cost/Lead", "Meetings Done", "Cost/Meeting", "Qualified",
+  "Future Qualified", "Cost/Qualified", "Cost/(FQ + QF)", "Conversions", "Cost/Conversion",
+];
+
+function emptyWidgets() {
+  return WIDGET_TITLES.map((title, i) => ({ id: i + 1, title, value: "–" }));
+}
+
+function emptyGraph() {
+  const empty = () => ({ labels: [], firstY: [], secondY: [] });
+  return { leads: empty(), meetings: empty(), qualified: empty(), converted: empty() };
+}
+
+function emptyLeads() {
+  const out = {};
+  ["google", "fb", "socials", "referral", "cplead"].forEach((k) => {
+    out[k] = 0;
+    out[`q_${k}`] = 0;
+    out[`m_${k}`] = 0;
+  });
+  return out;
+}
+
+// YYYY-MM-DD in the viewer's local time zone (toISOString() would give the UTC date).
+function formatLocalDate(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function prettyDate(ymd) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return `${d} ${MONTHS[m - 1]} ${y}`;
+}
+
+function describeRange(r) {
+  if (!r) return "";
+  const range = r.startDate === r.endDate
+    ? prettyDate(r.startDate)
+    : `${prettyDate(r.startDate)} – ${prettyDate(r.endDate)}`;
+  if (r.mStartDate && r.mEndDate) {
+    return `${range} (meetings ${prettyDate(r.mStartDate)} – ${prettyDate(r.mEndDate)})`;
+  }
+  return range;
+}
+
+// Calendar bucket for a YYYY-MM-DD label: "Oct 2026" or "Wk of 6 Oct" (weeks start Monday).
+function bucketLabel(ymd, interval) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (interval === "monthly") return `${MONTHS[m - 1]} ${y}`;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const offset = (date.getUTCDay() + 6) % 7; // days since Monday
+  date.setUTCDate(date.getUTCDate() - offset);
+  return `Wk of ${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}`;
+}
+
+async function readJson(response) {
+  let body = null;
+  try {
+    body = await response.json();
+  } catch (e) {
+    // non-JSON body (e.g. old backend's "err: ..." text)
+  }
+  if (!response.ok) {
+    const detail = (body && (body.error || body.message)) || `HTTP ${response.status}`;
+    throw new Error(response.status === 504 ? "The server timed out." : detail);
+  }
+  if (!body || typeof body !== "object") throw new Error("Unexpected response from server.");
+  return body;
+}
+
+// Uses the combined /app/dashboard endpoint; falls back to the two legacy
+// endpoints (fetched in parallel) if the backend hasn't been updated yet.
+async function fetchDashboard({ startDate, endDate, mStartDate, mEndDate }, signal) {
+  const meetingFilter = Boolean(mStartDate && mEndDate);
+  const query = meetingFilter ? `?mstart=${mStartDate}&mend=${mEndDate}` : "";
+  const response = await fetch(`${API_BASE}/app/dashboard/${startDate}/${endDate}${query}`, { signal });
+  if (response.status !== 404 && response.status !== 403) {
+    return readJson(response);
+  }
+
+  const leadsUrl = meetingFilter
+    ? `${API_BASE}/app/leads/meetingfilter/${startDate}/${endDate}/${mStartDate}/${mEndDate}`
+    : `${API_BASE}/app/leads/${startDate}/${endDate}`;
+  const meetingsUrl = meetingFilter
+    ? `${API_BASE}/app/leads/meetings/${mStartDate}/${mEndDate}`
+    : `${API_BASE}/app/leads/meetings/${startDate}/${endDate}`;
+  const [data, meetingData] = await Promise.all([
+    fetch(leadsUrl, { signal }).then(readJson),
+    fetch(meetingsUrl, { signal }).then(readJson),
+  ]);
+  if (typeof data.google_budget !== "number") throw new Error("Unexpected response from server.");
+  ["google_meeting", "facebook_meeting", "socials_meeting", "referral_meeting", "cplead_meeting"].forEach(
+    (k) => { data[k] = meetingData[k] || 0; }
+  );
+  return data;
 }
