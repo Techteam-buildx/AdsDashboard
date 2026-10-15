@@ -21,6 +21,8 @@ class Header extends React.Component {
       warnings: [],
       loadedRange: null,
       dataAsOf: null,
+      city: "",
+      cities: DEFAULT_CITIES,
       ...emptyLeads(),
     };
   }
@@ -63,6 +65,9 @@ class Header extends React.Component {
   componentDidMount() {
     const formattedDate = formatLocalDate(new Date());
     this.handleDateChange(formattedDate, formattedDate);
+    fetchCities().then((cities) => {
+      if (cities) this.setState({ cities });
+    });
   }
 
   componentWillUnmount() {
@@ -77,6 +82,7 @@ class Header extends React.Component {
       endDate: this.state.endDate,
       mStartDate: startDate,
       mEndDate: endDate,
+      city: this.state.city,
     });
   };
 
@@ -89,8 +95,13 @@ class Header extends React.Component {
       mEndDate: endDate,
     });
     if (startDate && endDate) {
-      this.loadData({ startDate, endDate });
+      this.loadData({ startDate, endDate, city: this.state.city });
     }
+  };
+
+  handleCityChange = (city) => {
+    this.setState({ city });
+    if (this.lastRequest) this.loadData({ ...this.lastRequest, city });
   };
 
   retry = () => {
@@ -487,6 +498,11 @@ class Header extends React.Component {
             startDate={this.state.startDate}
             endDate={this.state.endDate}
           />
+          <CityOptions
+            city={this.state.city}
+            cities={this.state.cities}
+            onCityChange={this.handleCityChange}
+          />
           <PageOptions />
           <GraphIntervalOptions />
         </div>
@@ -645,6 +661,8 @@ const API_BASE =
 // API Gateway gives up at 29s; stop waiting just before that.
 const REQUEST_TIMEOUT_MS = 28000;
 
+const DEFAULT_CITIES = ["Bangalore", "Hyderabad", "Hossur"];
+
 const WIDGET_TITLES = [
   "Budget", "Leads", "Cost/Lead", "Meetings Done", "Cost/Meeting", "Qualified",
   "Future Qualified", "Cost/Qualified", "Cost/(FQ + QF)", "Conversions", "Cost/Conversion",
@@ -689,10 +707,12 @@ function describeRange(r) {
   const range = r.startDate === r.endDate
     ? prettyDate(r.startDate)
     : `${prettyDate(r.startDate)} – ${prettyDate(r.endDate)}`;
+  const parts = [range];
   if (r.mStartDate && r.mEndDate) {
-    return `${range} (meetings ${prettyDate(r.mStartDate)} – ${prettyDate(r.mEndDate)})`;
+    parts.push(`meetings ${prettyDate(r.mStartDate)} – ${prettyDate(r.mEndDate)}`);
   }
-  return range;
+  parts.push(r.city || "All Cities");
+  return parts.join(" · ");
 }
 
 // Calendar bucket for a YYYY-MM-DD label: "Oct 2026" or "Wk of 6 Oct" (weeks start Monday).
@@ -722,13 +742,17 @@ async function readJson(response) {
 
 // Uses the combined /app/dashboard endpoint; falls back to the two legacy
 // endpoints (fetched in parallel) if the backend hasn't been updated yet.
-async function fetchDashboard({ startDate, endDate, mStartDate, mEndDate }, signal) {
+async function fetchDashboard({ startDate, endDate, mStartDate, mEndDate, city }, signal) {
   const meetingFilter = Boolean(mStartDate && mEndDate);
-  const query = meetingFilter ? `?mstart=${mStartDate}&mend=${mEndDate}` : "";
+  const params = [];
+  if (meetingFilter) params.push(`mstart=${mStartDate}`, `mend=${mEndDate}`);
+  if (city) params.push(`city=${encodeURIComponent(city)}`);
+  const query = params.length ? `?${params.join("&")}` : "";
   const response = await fetch(`${API_BASE}/app/dashboard/${startDate}/${endDate}${query}`, { signal });
   if (response.status !== 404 && response.status !== 403) {
     return readJson(response);
   }
+  if (city) throw new Error("The City filter needs the updated backend.");
 
   const leadsUrl = meetingFilter
     ? `${API_BASE}/app/leads/meetingfilter/${startDate}/${endDate}/${mStartDate}/${mEndDate}`
@@ -745,4 +769,16 @@ async function fetchDashboard({ startDate, endDate, mStartDate, mEndDate }, sign
     (k) => { data[k] = meetingData[k] || 0; }
   );
   return data;
+}
+
+// City list from the backend; null if unavailable (older backend), keeping the defaults.
+async function fetchCities() {
+  try {
+    const response = await fetch(`${API_BASE}/app/config`);
+    if (!response.ok) return null;
+    const body = await response.json();
+    return Array.isArray(body.cities) && body.cities.length ? body.cities : null;
+  } catch (e) {
+    return null;
+  }
 }
