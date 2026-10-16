@@ -15,7 +15,7 @@ class Dashboard extends React.Component {
       mEndDate: null,
       city: "",
       cities: DEFAULT_CITIES,
-      page: "comparison",
+      page: "comparison", // Combined View, as before
       interval: "daily",
       data: null,
       loading: true,
@@ -174,22 +174,22 @@ class Dashboard extends React.Component {
 
           <div className="grid-2">
             <TrendChart
-              title="Spend over time"
+              title="Budget over time"
               subtitle={`${sourceLabel} · incl. GST`}
               kind="bar"
               format="money"
               labels={sr.labels}
-              series={[{ label: "Spend", data: sr.spend, colorVar: "--series-1" }]}
+              series={[{ label: "Budget", data: sr.spend, colorVar: "--series-1" }]}
             />
             <TrendChart
-              title="Leads, meetings and qualified"
+              title="Leads, Meetings Done and Qualified"
               subtitle={sourceLabel}
               kind="line"
               format="count"
               labels={sr.labels}
               series={[
                 { label: "Leads", data: sr.leads, colorVar: "--series-1" },
-                { label: "Meetings done", data: sr.meetings, colorVar: "--series-2" },
+                { label: "Meetings Done", data: sr.meetings, colorVar: "--series-2" },
                 { label: "Qualified", data: sr.qualified, colorVar: "--series-3" },
               ]}
             />
@@ -197,12 +197,12 @@ class Dashboard extends React.Component {
 
           <div className={breakdown ? "grid-2" : "grid-1"}>
             <TrendChart
-              title="Cost per lead"
-              subtitle={`${sourceLabel} · spend ÷ leads per period`}
+              title="Cost/Lead over time"
+              subtitle={`${sourceLabel} · budget ÷ leads`}
               kind="line"
               format="money"
               labels={sr.labels}
-              series={[{ label: "Cost per lead", data: sr.cpl, colorVar: "--series-1" }]}
+              series={[{ label: "Cost/Lead", data: sr.cpl, colorVar: "--series-1" }]}
             />
             {breakdown && <SourceTable rows={breakdown} />}
           </div>
@@ -212,7 +212,7 @@ class Dashboard extends React.Component {
           {!s.data && s.loading && <div className="loading-note">Loading data…</div>}
         </main>
 
-        <footer className="footer">Spend includes 18% GST · Data from Google Ads, Meta Ads and Zoho CRM</footer>
+        <footer className="footer">Budget includes 18% GST · Data from Google Ads, Meta Ads and Zoho CRM</footer>
       </div>
     );
   }

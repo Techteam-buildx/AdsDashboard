@@ -1,4 +1,4 @@
-// Source tabs (Combined, Google Ads, Meta Ads, ...).
+// Source tabs (Google, Facebook, Referral, CP Lead, Combined View, Socials).
 class SourceTabs extends React.Component {
   render() {
     const { value, onChange } = this.props;
@@ -33,29 +33,28 @@ class KpiTile extends React.Component {
   }
 }
 
-// Headline KPIs (spend → leads → meetings) and the lead-quality row below them.
+// Headline KPIs (budget → leads → meetings) and the lead-quality row below them.
 class KpiTiles extends React.Component {
   render() {
     const m = this.props.metrics;
     const v = (x, fmt) => (m ? fmt(x) : "–");
-    const money = (x) => v(x, formatRupeesCompact);
-    const full = (x) => (m && x != null ? formatRupees(x) : undefined);
+    const money = (x) => v(x, formatRupees);
     return (
       <section className="kpis" aria-label="Key metrics">
         <div className="kpi-row kpi-row-primary">
-          <KpiTile primary label="Spend" value={money(m && m.spend)} title={full(m && m.spend)} hint="incl. GST" />
+          <KpiTile primary label="Budget" value={money(m && m.spend)} hint="incl. GST" />
           <KpiTile primary label="Leads" value={v(m && m.leads, formatCount)} />
-          <KpiTile primary label="Cost per lead" value={money(m && m.cpl)} title={full(m && m.cpl)} />
-          <KpiTile primary label="Meetings done" value={v(m && m.meetings, formatCount)} />
-          <KpiTile primary label="Cost per meeting" value={money(m && m.cpm)} title={full(m && m.cpm)} />
+          <KpiTile primary label="Cost/Lead" value={money(m && m.cpl)} />
+          <KpiTile primary label="Meetings Done" value={v(m && m.meetings, formatCount)} />
+          <KpiTile primary label="Cost/Meeting" value={money(m && m.cpm)} />
         </div>
         <div className="kpi-row">
           <KpiTile label="Qualified" value={v(m && m.qualified, formatCount)} />
-          <KpiTile label="Future qualified" value={v(m && m.futureQualified, formatCount)} />
-          <KpiTile label="Cost per qualified" value={money(m && m.cpq)} title={full(m && m.cpq)} />
-          <KpiTile label="Cost per (Q + FQ)" value={money(m && m.cqf)} title={full(m && m.cqf)} />
+          <KpiTile label="Future Qualified" value={v(m && m.futureQualified, formatCount)} />
+          <KpiTile label="Cost/Qualified" value={money(m && m.cpq)} />
+          <KpiTile label="Cost/(FQ + QF)" value={money(m && m.cqf)} />
           <KpiTile label="Conversions" value={v(m && m.conversions, formatCount)} />
-          <KpiTile label="Cost per conversion" value={money(m && m.cpc)} title={full(m && m.cpc)} />
+          <KpiTile label="Cost/Conversion" value={money(m && m.cpc)} />
         </div>
       </section>
     );

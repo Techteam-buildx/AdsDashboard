@@ -8,7 +8,7 @@ class SourceTable extends React.Component {
         <div className="card-head">
           <div>
             <h3 className="card-title">By source</h3>
-            <p className="card-subtitle">Spend share, leads and cost per result</p>
+            <p className="card-subtitle">Budget, leads and cost for each source</p>
           </div>
         </div>
         <div className="table-wrap">
@@ -16,12 +16,12 @@ class SourceTable extends React.Component {
             <thead>
               <tr>
                 <th>Source</th>
-                <th className="num">Spend</th>
+                <th className="num">Budget</th>
                 <th className="num">Leads</th>
-                <th className="num">Cost / lead</th>
-                <th className="num">Meetings</th>
+                <th className="num">Cost/Lead</th>
+                <th className="num">Meetings Done</th>
                 <th className="num">Qualified</th>
-                <th className="num">Cost / qualified</th>
+                <th className="num">Cost/Qualified</th>
               </tr>
             </thead>
             <tbody>
@@ -33,7 +33,7 @@ class SourceTable extends React.Component {
                       <span className="bar-track">
                         <span className="bar-fill" style={{ width: `${(r.spend / maxSpend) * 100}%` }} />
                       </span>
-                      <span title={formatRupees(r.spend)}>{formatRupeesCompact(r.spend)}</span>
+                      <span>{formatRupees(r.spend)}</span>
                     </div>
                   </td>
                   <td className="num">{formatCount(r.leads)}</td>
@@ -81,14 +81,15 @@ class PeriodTable extends React.Component {
             <thead>
               <tr>
                 <th>{unit}</th>
-                <th className="num">Spend</th>
+                <th className="num">Budget</th>
                 <th className="num">Leads</th>
-                <th className="num">Cost / lead</th>
-                <th className="num">Meetings</th>
-                <th className="num">Cost / meeting</th>
+                <th className="num">Cost/Lead</th>
+                <th className="num">Meetings Done</th>
+                <th className="num">Cost/Meeting</th>
                 <th className="num">Qualified</th>
-                <th className="num">Cost / qualified</th>
+                <th className="num">Cost/Qualified</th>
                 <th className="num">Conversions</th>
+                <th className="num">Cost/Conversion</th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +104,7 @@ class PeriodTable extends React.Component {
                   <td className="num">{formatCount(r.qualified)}</td>
                   <td className="num">{formatRupees(ratio(r.spend, r.qualified))}</td>
                   <td className="num">{formatCount(r.conversions)}</td>
+                  <td className="num">{formatRupees(ratio(r.spend, r.conversions))}</td>
                 </tr>
               ))}
             </tbody>
@@ -118,6 +120,7 @@ class PeriodTable extends React.Component {
                   <td className="num">{formatCount(metrics.qualified)}</td>
                   <td className="num">{formatRupees(metrics.cpq)}</td>
                   <td className="num">{formatCount(metrics.conversions)}</td>
+                  <td className="num">{formatRupees(metrics.cpc)}</td>
                 </tr>
               </tfoot>
             )}

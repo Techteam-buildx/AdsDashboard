@@ -68,15 +68,13 @@ function addDays(date, days) {
   return d;
 }
 
+// Same presets and meanings as the original dashboard.
 const DATE_PRESETS = [
   { key: "today", label: "Today" },
-  { key: "yesterday", label: "Yesterday" },
-  { key: "last7", label: "Last 7 days" },
-  { key: "last30", label: "Last 30 days" },
-  { key: "thisMonth", label: "This month" },
-  { key: "lastMonth", label: "Last month" },
-  { key: "last90", label: "Last 90 days" },
-  { key: "custom", label: "Custom range…" },
+  { key: "lastWeek", label: "Last Week" },
+  { key: "lastMonth", label: "Last Month" },
+  { key: "lastYear", label: "Last Year" },
+  { key: "custom", label: "Custom" },
 ];
 
 // [startDate, endDate] for a preset, as YYYY-MM-DD.
@@ -85,16 +83,10 @@ function presetRange(key, now = new Date()) {
   const f = formatLocalDate;
   switch (key) {
     case "today": return [f(today), f(today)];
-    case "yesterday": return [f(addDays(today, -1)), f(addDays(today, -1))];
-    case "last7": return [f(addDays(today, -6)), f(today)];
-    case "last30": return [f(addDays(today, -29)), f(today)];
-    case "last90": return [f(addDays(today, -89)), f(today)];
-    case "thisMonth": return [f(new Date(today.getFullYear(), today.getMonth(), 1)), f(today)];
-    case "lastMonth":
-      return [
-        f(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
-        f(new Date(today.getFullYear(), today.getMonth(), 0)),
-      ];
+    // "Last Week/Month/Year" = from the same day a week/month/year ago up to today.
+    case "lastWeek": return [f(addDays(today, -7)), f(today)];
+    case "lastMonth": return [f(new Date(today.getFullYear(), today.getMonth() - 1, today.getDate())), f(today)];
+    case "lastYear": return [f(new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())), f(today)];
     default: return null;
   }
 }
@@ -113,7 +105,7 @@ function describeRange(r) {
   if (r.mStartDate && r.mEndDate) {
     parts.push(`meetings ${prettyDate(r.mStartDate)} – ${prettyDate(r.mEndDate)}`);
   }
-  parts.push(r.city || "All cities");
+  parts.push(r.city || "All Cities");
   return parts.join(" · ");
 }
 
@@ -168,13 +160,14 @@ function ratio(a, b) {
 
 // ---------- Sources and metrics ----------
 
+// Same names and order as the original "Dashboard" dropdown.
 const SOURCES = [
-  { key: "comparison", label: "Combined" },
-  { key: "google", label: "Google Ads" },
-  { key: "facebook", label: "Meta Ads" },
-  { key: "socials", label: "Socials" },
+  { key: "google", label: "Google" },
+  { key: "facebook", label: "Facebook" },
   { key: "referral", label: "Referral" },
-  { key: "cplead", label: "CP Leads" },
+  { key: "cplead", label: "CP Lead" },
+  { key: "comparison", label: "Combined View" },
+  { key: "socials", label: "Socials" },
 ];
 
 // API field prefixes behind each tab.

@@ -9,7 +9,7 @@ class DateRangeControl extends React.Component {
   handlePreset = (event) => {
     const key = event.target.value;
     if (key === "custom") {
-      const [from, to] = presetRange("last7");
+      const [from, to] = presetRange("lastWeek");
       this.setState({ from: this.props.start || from, to: this.props.end || to });
       this.props.onChange(key, null, null);
       return;
@@ -109,7 +109,7 @@ class FilterBar extends React.Component {
       <div className="filter-bar">
         <DateRangeControl
           id="lead-range"
-          label="Lead date"
+          label="Select Date Range"
           preset={p.datePreset}
           start={p.startDate}
           end={p.endDate}
@@ -117,10 +117,10 @@ class FilterBar extends React.Component {
         />
         <DateRangeControl
           id="meeting-range"
-          label="Meeting date"
+          label="Check Meetings"
           preset={p.meetingPreset}
           allowNone
-          noneLabel="Any meeting date"
+          noneLabel="Choose"
           start={p.mStartDate}
           end={p.mEndDate}
           onChange={p.onMeetingChange}
@@ -128,13 +128,13 @@ class FilterBar extends React.Component {
         <div className="filter">
           <label className="filter-label" htmlFor="city">City</label>
           <select id="city" className="control" value={p.city} onChange={(e) => p.onCityChange(e.target.value)}>
-            <option value="">All cities</option>
+            <option value="">All Cities</option>
             {p.cities.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
         </div>
-        <SegmentedControl label="Interval" options={INTERVALS} value={p.interval} onChange={p.onIntervalChange} />
+        <SegmentedControl label="Graph Interval" options={INTERVALS} value={p.interval} onChange={p.onIntervalChange} />
       </div>
     );
   }

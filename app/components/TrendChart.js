@@ -29,9 +29,6 @@ class TrendChart extends React.Component {
 
   componentDidMount() {
     this.build();
-    this.media = window.matchMedia("(prefers-color-scheme: dark)");
-    this.onScheme = () => this.build();
-    this.media.addEventListener("change", this.onScheme);
   }
 
   componentDidUpdate(prev) {
@@ -41,7 +38,6 @@ class TrendChart extends React.Component {
   }
 
   componentWillUnmount() {
-    if (this.media) this.media.removeEventListener("change", this.onScheme);
     if (this.chart) this.chart.destroy();
   }
 
