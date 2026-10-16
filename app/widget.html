@@ -1,24 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marketing Dashboard</title>
   <link rel="stylesheet" href="./index.css">
 </head>
 
 <body>
-  <div class="dashboard">
-    <section class="container">
-      <div id="app"></div>
-    </section>
-    <section class="footer">
-      <p style="font-weight: 600; padding-left: 20px;">
-        <img src="./static/img/image.png" width="20" height="20"
-          style="position: relative; top: 3px; padding-right: 4px; z-index: 8;" />
-        Developed By- BuildX Team
-      </p>
-    </section>
-  </div>
+  <div id="app"></div>
 
   <!-- Pinned local copies: React 18.3.1 production, Chart.js 4.5.1 -->
   <script src="./static/js/react.production.min.js"></script>
@@ -30,32 +21,14 @@
     window.ADS_API_BASE = "https://2onghku7vk.execute-api.ap-south-1.amazonaws.com/dev";
   </script>
 
-  <script>
-    window.PageContext = React.createContext({
-      page: "google",
-      graphInterval: "daily",
-      changePage: () => { },
-      changeGraphInterval: () => { },
-    });
-  </script>
-
-  <script src="./dist/components/Mdoughnut.js"></script>
-  <script src="./dist/components/Qdoughnut.js"></script>
-  <script src="./dist/components/Doughnut.js"></script>
-  <script src="./dist/components/Reloading.js"></script>
-  <script src="./dist/components/ChartDisplay.js"></script>
-  <script src="./dist/components/GraphSection.js"></script>
-  <script src="./dist/components/DataTable.js"></script>
-  <script src="./dist/components/MeetingOptions.js"></script>
+  <script src="./dist/components/utils.js"></script>
   <script src="./dist/components/StatusBar.js"></script>
-  <script src="./dist/components/TimeOptions.js"></script>
-  <script src="./dist/components/PageOptions.js"></script>
-  <script src="./dist/components/CityOptions.js"></script>
-  <script src="./dist/components/Header.js"></script>
-  <script src="./dist/components/GraphIntervalOptions.js"></script>
-
+  <script src="./dist/components/FilterBar.js"></script>
+  <script src="./dist/components/KpiTiles.js"></script>
+  <script src="./dist/components/TrendChart.js"></script>
+  <script src="./dist/components/Tables.js"></script>
+  <script src="./dist/components/Dashboard.js"></script>
   <script src="./main.js"></script>
-
 </body>
 
 </html>

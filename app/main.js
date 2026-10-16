@@ -1,2 +1,2 @@
-// dist/main.js
-ReactDOM.createRoot(document.getElementById("app")).render(React.createElement(Header));
+// Entry point: render the dashboard.
+ReactDOM.createRoot(document.getElementById("app")).render(React.createElement(Dashboard));

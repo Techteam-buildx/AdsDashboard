@@ -1,0 +1,129 @@
+// Spend, leads and costs per source, with an inline bar for each source's share of spend.
+class SourceTable extends React.Component {
+  render() {
+    const rows = this.props.rows;
+    const maxSpend = Math.max(1, ...rows.map((r) => r.spend));
+    return (
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">By source</h3>
+            <p className="card-subtitle">Spend share, leads and cost per result</p>
+          </div>
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th className="num">Spend</th>
+                <th className="num">Leads</th>
+                <th className="num">Cost / lead</th>
+                <th className="num">Meetings</th>
+                <th className="num">Qualified</th>
+                <th className="num">Cost / qualified</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.key}>
+                  <td>{r.label}</td>
+                  <td className="num">
+                    <div className="bar-cell">
+                      <span className="bar-track">
+                        <span className="bar-fill" style={{ width: `${(r.spend / maxSpend) * 100}%` }} />
+                      </span>
+                      <span title={formatRupees(r.spend)}>{formatRupeesCompact(r.spend)}</span>
+                    </div>
+                  </td>
+                  <td className="num">{formatCount(r.leads)}</td>
+                  <td className="num">{formatRupees(r.cpl)}</td>
+                  <td className="num">{formatCount(r.meetings)}</td>
+                  <td className="num">{formatCount(r.qualified)}</td>
+                  <td className="num">{formatRupees(r.cpq)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+}
+
+// Period-by-period numbers behind the charts, newest first, with a totals row.
+class PeriodTable extends React.Component {
+  render() {
+    const { series, metrics, interval } = this.props;
+    const n = series.labels.length;
+    const rows = [];
+    for (let i = n - 1; i >= 0; i--) {
+      rows.push({
+        label: series.labels[i],
+        spend: series.spend[i],
+        leads: series.leads[i],
+        meetings: series.meetings[i],
+        qualified: series.qualified[i],
+        conversions: series.conversions[i],
+      });
+    }
+    const unit = interval === "monthly" ? "Month" : interval === "weekly" ? "Week" : "Day";
+    return (
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">{unit}-by-{unit.toLowerCase()} detail</h3>
+            <p className="card-subtitle">Newest first</p>
+          </div>
+        </div>
+        <div className="table-wrap table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>{unit}</th>
+                <th className="num">Spend</th>
+                <th className="num">Leads</th>
+                <th className="num">Cost / lead</th>
+                <th className="num">Meetings</th>
+                <th className="num">Cost / meeting</th>
+                <th className="num">Qualified</th>
+                <th className="num">Cost / qualified</th>
+                <th className="num">Conversions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.label}>
+                  <td>{r.label}</td>
+                  <td className="num">{formatRupees(r.spend)}</td>
+                  <td className="num">{formatCount(r.leads)}</td>
+                  <td className="num">{formatRupees(ratio(r.spend, r.leads))}</td>
+                  <td className="num">{formatCount(r.meetings)}</td>
+                  <td className="num">{formatRupees(ratio(r.spend, r.meetings))}</td>
+                  <td className="num">{formatCount(r.qualified)}</td>
+                  <td className="num">{formatRupees(ratio(r.spend, r.qualified))}</td>
+                  <td className="num">{formatCount(r.conversions)}</td>
+                </tr>
+              ))}
+            </tbody>
+            {metrics && (
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td className="num">{formatRupees(metrics.spend)}</td>
+                  <td className="num">{formatCount(metrics.leads)}</td>
+                  <td className="num">{formatRupees(metrics.cpl)}</td>
+                  <td className="num">{formatCount(metrics.meetings)}</td>
+                  <td className="num">{formatRupees(metrics.cpm)}</td>
+                  <td className="num">{formatCount(metrics.qualified)}</td>
+                  <td className="num">{formatRupees(metrics.cpq)}</td>
+                  <td className="num">{formatCount(metrics.conversions)}</td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </div>
+    );
+  }
+}
