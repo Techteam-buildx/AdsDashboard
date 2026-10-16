@@ -109,20 +109,22 @@ function describeRange(r) {
   return parts.join(" · ");
 }
 
-function shortDateLabel(ymd) {
-  const [, m, d] = ymd.split("-").map(Number);
-  return `${d} ${MONTHS[m - 1]}`;
+function shortDateLabel(ymd, withYear) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return withYear ? `${d} ${MONTHS[m - 1]} ${y}` : `${d} ${MONTHS[m - 1]}`;
 }
 
 // Calendar bucket for a YYYY-MM-DD label: "Oct 2026" or "Wk of 6 Oct" (weeks start Monday).
-function bucketLabel(ymd, interval) {
+// `withYear` adds the year to day/week labels when the range spans more than one year.
+function bucketLabel(ymd, interval, withYear) {
   const [y, m, d] = ymd.split("-").map(Number);
   if (interval === "monthly") return `${MONTHS[m - 1]} ${y}`;
-  if (interval !== "weekly") return shortDateLabel(ymd);
+  if (interval !== "weekly") return shortDateLabel(ymd, withYear);
   const date = new Date(Date.UTC(y, m - 1, d));
   const offset = (date.getUTCDay() + 6) % 7; // days since Monday
   date.setUTCDate(date.getUTCDate() - offset);
-  return `Wk of ${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}`;
+  const label = `Wk of ${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}`;
+  return withYear ? `${label} ${date.getUTCFullYear()}` : label;
 }
 
 // ---------- Number formatting (Indian system) ----------
@@ -201,7 +203,7 @@ function computeMetrics(data, page) {
     futureQualified,
     conversions,
     // Referral cost per lead is a fixed payout per converted referral, as before.
-    cpl: page === "referral" ? (data.cpl_referral || null) : ratio(spend, leads),
+    cpl: page === "referral" ? (data.cpl_referral ?? null) : ratio(spend, leads),
     cpm: ratio(spend, meetings),
     cpq: ratio(spend, qualified),
     cqf: ratio(spend, qualified + futureQualified),
@@ -231,9 +233,10 @@ function computeSeries(data, page, interval) {
   };
   const labels = [];
   const out = { spend: [], leads: [], meetings: [], qualified: [], conversions: [] };
+  const multiYear = dates.length > 0 && dates[0].slice(0, 4) !== dates[dates.length - 1].slice(0, 4);
   let current = null;
   dates.forEach((date, i) => {
-    const key = bucketLabel(date, interval);
+    const key = bucketLabel(date, interval, multiYear);
     if (key !== current) {
       current = key;
       labels.push(key);

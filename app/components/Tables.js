@@ -93,8 +93,8 @@ class PeriodTable extends React.Component {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.label}>
+              {rows.map((r, i) => (
+                <tr key={i}>
                   <td>{r.label}</td>
                   <td className="num">{formatRupees(r.spend)}</td>
                   <td className="num">{formatCount(r.leads)}</td>
