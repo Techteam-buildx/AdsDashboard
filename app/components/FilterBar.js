@@ -1,0 +1,141 @@
+// A date-range picker: preset list plus a custom From/To range.
+// `allowNone` adds a first option that clears the range (used by the meeting-date filter).
+class DateRangeControl extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { from: "", to: "" };
+  }
+
+  handlePreset = (event) => {
+    const key = event.target.value;
+    if (key === "custom") {
+      const [from, to] = presetRange("lastWeek");
+      this.setState({ from: this.props.start || from, to: this.props.end || to });
+      this.props.onChange(key, null, null);
+      return;
+    }
+    if (key === "none") {
+      this.props.onChange(key, null, null);
+      return;
+    }
+    const [start, end] = presetRange(key);
+    this.props.onChange(key, start, end);
+  };
+
+  applyCustom = () => {
+    const { from, to } = this.state;
+    if (from && to && from <= to) this.props.onChange("custom", from, to);
+  };
+
+  render() {
+    const { id, label, preset, allowNone, noneLabel } = this.props;
+    const { from, to } = this.state;
+    const invalid = !from || !to || from > to;
+    return (
+      <div className="filter">
+        <label className="filter-label" htmlFor={id}>{label}</label>
+        <div className="filter-row">
+          <select id={id} className="control" value={preset} onChange={this.handlePreset}>
+            {allowNone && <option value="none">{noneLabel}</option>}
+            {DATE_PRESETS.map((p) => (
+              <option key={p.key} value={p.key}>{p.label}</option>
+            ))}
+          </select>
+          {preset === "custom" && (
+            <div className="custom-range">
+              <input
+                type="date"
+                className="control"
+                aria-label={`${label} from`}
+                value={from}
+                max={to || undefined}
+                onChange={(e) => this.setState({ from: e.target.value })}
+              />
+              <span className="range-sep">to</span>
+              <input
+                type="date"
+                className="control"
+                aria-label={`${label} to`}
+                value={to}
+                min={from || undefined}
+                onChange={(e) => this.setState({ to: e.target.value })}
+              />
+              <button className="btn btn-primary" disabled={invalid} onClick={this.applyCustom}>
+                Apply
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+}
+
+class SegmentedControl extends React.Component {
+  render() {
+    const { label, options, value, onChange } = this.props;
+    return (
+      <div className="filter">
+        <span className="filter-label">{label}</span>
+        <div className="segmented" role="radiogroup" aria-label={label}>
+          {options.map((o) => (
+            <button
+              key={o.key}
+              role="radio"
+              aria-checked={value === o.key}
+              className={value === o.key ? "segment is-active" : "segment"}
+              onClick={() => onChange(o.key)}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+}
+
+const INTERVALS = [
+  { key: "daily", label: "Daily" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+];
+
+// The single filter row that scopes everything below it.
+class FilterBar extends React.Component {
+  render() {
+    const p = this.props;
+    return (
+      <div className="filter-bar">
+        <DateRangeControl
+          id="lead-range"
+          label="Select Date Range"
+          preset={p.datePreset}
+          start={p.startDate}
+          end={p.endDate}
+          onChange={p.onDateChange}
+        />
+        <DateRangeControl
+          id="meeting-range"
+          label="Check Meetings"
+          preset={p.meetingPreset}
+          allowNone
+          noneLabel="Choose"
+          start={p.mStartDate}
+          end={p.mEndDate}
+          onChange={p.onMeetingChange}
+        />
+        <div className="filter">
+          <label className="filter-label" htmlFor="city">City</label>
+          <select id="city" className="control" value={p.city} onChange={(e) => p.onCityChange(e.target.value)}>
+            <option value="">All Cities</option>
+            {p.cities.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <SegmentedControl label="Graph Interval" options={INTERVALS} value={p.interval} onChange={p.onIntervalChange} />
+      </div>
+    );
+  }
+}
