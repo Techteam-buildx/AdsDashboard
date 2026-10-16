@@ -111,7 +111,9 @@ class Header extends React.Component {
   // Fetches dashboard data for a selection. Only the most recent selection may update
   // the screen: older in-flight requests are aborted and their results ignored, and a
   // failed request clears the numbers instead of leaving the previous range's data visible.
-  loadData = async (request) => {
+  // A timeout is retried once: after a backend restart the first load can outlive the
+  // gateway's limit, and the retry is then served from the freshly filled cache.
+  loadData = async (request, isRetry = false) => {
     const requestId = ++this.requestCounter;
     this.lastRequest = request;
     if (this.abortController) this.abortController.abort();
@@ -142,6 +144,11 @@ class Header extends React.Component {
       });
     } catch (e) {
       if (requestId !== this.requestCounter) return;
+      if (!isRetry && (e.name === "AbortError" || e.isTimeout)) {
+        clearTimeout(timer);
+        this.loadData(request, true);
+        return;
+      }
       const message =
         e.name === "AbortError"
           ? "The server took too long to respond."
@@ -734,7 +741,9 @@ async function readJson(response) {
   }
   if (!response.ok) {
     const detail = (body && (body.error || body.message)) || `HTTP ${response.status}`;
-    throw new Error(response.status === 504 ? "The server timed out." : detail);
+    const err = new Error(response.status === 504 ? "The server timed out." : detail);
+    err.isTimeout = response.status === 504;
+    throw err;
   }
   if (!body || typeof body !== "object") throw new Error("Unexpected response from server.");
   return body;
