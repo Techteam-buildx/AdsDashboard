@@ -1,3 +1,8 @@
+// A line needs at least two points; a single day (e.g. Today) is drawn as bars instead.
+function chartKind(kind, labels) {
+  return kind === "line" && labels.length < 2 ? "bar" : kind;
+}
+
 // Vertical hairline that follows the hovered date.
 const crosshairPlugin = {
   id: "crosshair",
@@ -43,7 +48,8 @@ class TrendChart extends React.Component {
 
   build() {
     if (this.chart) this.chart.destroy();
-    const { labels, series, kind, format } = this.props;
+    const { labels, series, format } = this.props;
+    const kind = chartKind(this.props.kind, labels);
     const fmtTick = format === "money" ? formatRupeesAxis : (v) => formatCount(v);
     const fmtValue = format === "money" ? formatRupees : formatCount;
     const grid = themeColor("--grid");
@@ -105,7 +111,8 @@ class TrendChart extends React.Component {
   }
 
   render() {
-    const { title, subtitle, series, kind } = this.props;
+    const { title, subtitle, series, labels } = this.props;
+    const kind = chartKind(this.props.kind, labels);
     return (
       <div className="card chart-card">
         <div className="card-head">
